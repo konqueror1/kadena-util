@@ -64,7 +64,7 @@ def main():
             else:
                 country = "??"
 
-            print('\t'.join(str(x) for x in [country, host, port, height / 10]))
+            print('\t'.join(str(x) for x in [country, host, port, height / 10 if height is not None else "????"]))
 
 
 if __name__ == "__main__":
