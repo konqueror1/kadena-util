@@ -1,9 +1,8 @@
 import requests
-from geoip import geolite2
 import socket
 from clint.textui import colored, puts
 from clint.textui import progress
-
+from geolite2 import geolite2
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -27,7 +26,7 @@ def get_peer_height(host, port):
     try:
         height = requests.get(
             'https://%s:%s/chainweb/0.0/mainnet01/cut/' % (host, port),
-            verify=False, timeout=3).json()['height']
+            verify=False, timeout=3).json()['height'] // 10
     except KeyboardInterrupt as e:
         raise e
     except:
@@ -52,20 +51,16 @@ def main():
         last_host_list = new_host_list
 
         for (host, port, height) in new_host_list:
-            if host[-1].isdigit():
-                ip = host
-            else:
-                ip = socket.gethostbyname(host)
-
-            match = geolite2.lookup(ip)
-
-            if match is not None:
-                country = match.country
+            reader = geolite2.reader()
+            match = reader.get(socket.gethostbyname(host))
+            if 'country' in match:
+                country = match['country']['iso_code']
+            elif 'continent' in match:
+                country = match['continent']['code']
             else:
                 country = "??"
 
-            print('\t'.join(str(x) for x in [country, host, port, height / 10 if height is not None else "????"]))
-
+            print("%3s %30s %6s %7s" %(country, host, port, height if height is not None else "??????"))
 
 if __name__ == "__main__":
     main()
