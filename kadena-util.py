@@ -15,7 +15,7 @@ def get_peer_list(old_list_with_heights):
         else:
             return len(sort_order)
 
-    items = requests.get('https://us-e1.chainweb.com/chainweb/0.0/mainnet01/cut/peer').json()['items']
+    items = requests.get('https://us-e2.chainweb.com/chainweb/0.0/mainnet01/cut/peer').json()['items']
     items = [(host['address']['hostname'], host['address']['port'])
              for host in items]
     items.sort(key=sort_func)
@@ -32,6 +32,13 @@ def get_peer_height(host, port):
     except:
         return None
     return height
+
+def host2ip(host):
+    try:
+        ip = socket.gethostbyname(host)
+    except:
+        ip = '127.0.0.1'
+    return ip
 
 def main():
     last_host_list = []
@@ -51,11 +58,13 @@ def main():
         last_host_list = new_host_list
 
         for (host, port, height) in new_host_list:
+
             reader = geolite2.reader()
-            match = reader.get(socket.gethostbyname(host))
-            if 'country' in match:
+            match = reader.get(host2ip(host))
+            if match is not None:
+              if 'country' in match:
                 country = match['country']['iso_code']
-            elif 'continent' in match:
+              elif 'continent' in match:
                 country = match['continent']['code']
             else:
                 country = "??"
